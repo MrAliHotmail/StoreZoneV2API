@@ -361,3 +361,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/StoreZoneV2API.Web/StoreZoneV2API.Web.http
