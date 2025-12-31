@@ -7,6 +7,7 @@ namespace StoreZoneV2API.WebApp.Controllers
 {
     public class HomeController : Controller
     {
+        // GET: HomeController From Sir.ali911@hotmail.com
         private readonly ProductService _productService;
         public HomeController(ProductService productService)
         {
