@@ -8,8 +8,7 @@ namespace StoreZoneV2API.WebApp.Controllers
     public class HomeController : Controller
     {
 
-        // really good code
-        // new commit++++ add new feature
+        
         // now inThursday branch
         private readonly ProductService _productService;
         public HomeController(ProductService productService)
