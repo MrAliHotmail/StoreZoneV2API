@@ -4,6 +4,7 @@ using StoreZoneV2API.Domain.Entities;
 
 namespace StoreZoneV2API.Web.Controllers
 {
+    //add this today friday in 9:44 AM...
     [ApiController]
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
