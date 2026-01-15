@@ -3,7 +3,7 @@ name: CI/CD StoreZoneV2
 on:
   push:
     branches:
-      - main # سيعمل الأكشن عند كل Push لفرع main
+      - master # سيعمل الأكشن عند كل Push لفرع main
 
 jobs:
   build-and-deploy:
