@@ -21,8 +21,8 @@ jobs:
 
     # 3. بناء المشروع (CI)
     - name: Build and Publish
-      run: |
-        dotnet restore
+      run: | 
+        dotnet restore StoreZoneV2API.Web.csproj
         dotnet build --configuration Release
         dotnet publish -c Release -o ./publish
 
