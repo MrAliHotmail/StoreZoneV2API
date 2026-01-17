@@ -18,13 +18,17 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10' # تأكد من إصدارك
-
+    - name: build and Push Docker image
+      run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/myapp:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/myapp:${{ github.sha }}
+        
     # 3. بناء المشروع (CI)
-    - name: Build and Publish 
-      run: | 
-        dotnet restore **/StoreZoneV2API.Web.csproj
-        dotnet build **/StoreZoneV2API.Web.csproj --configuration Release
-        dotnet publish **/StoreZoneV2API.Web.csproj -c Release -o ./publish
+   # - name: Build and Publish 
+     # run: | 
+       # dotnet restore **/StoreZoneV2API.Web.csproj
+       # dotnet build **/StoreZoneV2API.Web.csproj --configuration Release
+       # dotnet publish **/StoreZoneV2API.Web.csproj -c Release -o ./publish
 
     # 4. تسجيل الدخول إلى Azure
     - name: 🔐🔐🔐 Login to Azure 
