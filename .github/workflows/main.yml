@@ -18,6 +18,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10' # تأكد من إصدارك
+    - name: List files
+      run: ls -R  # سيعرض لك كل الملفات والمجلدات في المستودع
     - name: build and Push Docker image
       run: |
           docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/myapp:${{ github.sha }}
