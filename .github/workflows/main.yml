@@ -50,4 +50,4 @@ jobs:
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ secrets.AZURE_APP_NAME }}
-        package: ${{github.workspace}}/publish 
+        images: ${{ secrets.ACR_LOGIN_SERVER }}/${{secrets.IMAGE_NAME}}:${{ github. sha }}
