@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreZoneV2API.Domain.Entities;
-using StoreZoneV2API.Domain.Interfaces;
+using StoreZoneV2API.Domain.Interfaces.Data;
+using StoreZoneV2API.Infrastructure.Data;
 
-namespace StoreZoneV2API.Infrastructure
+namespace StoreZoneV2API.Infrastructure.Data.Repositories
 {
     public class ProductRepository : IProductRepository
     {

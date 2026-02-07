@@ -15,4 +15,8 @@
     <ProjectReference Include="..\StoreZoneV2API.Domain\StoreZoneV2API.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Identity\" />
+  </ItemGroup>
+
 </Project>

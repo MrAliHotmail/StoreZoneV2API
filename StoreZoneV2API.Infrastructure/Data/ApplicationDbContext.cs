@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using StoreZoneV2API.Domain.Entities;
 
-namespace StoreZoneV2API.Infrastructure
+namespace StoreZoneV2API.Infrastructure.Data
 {
     public class ApplicationDbContext : DbContext
     {

@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StoreZoneV2API.Application\StoreZoneV2API.Application.csproj" />
+    <ProjectReference Include="..\StoreZoneV2API.Web\StoreZoneV2API.Web.csproj" />
   </ItemGroup>
 
 </Project>

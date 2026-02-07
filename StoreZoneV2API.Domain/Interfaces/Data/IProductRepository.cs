@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StoreZoneV2API.Domain.Interfaces
+namespace StoreZoneV2API.Domain.Interfaces.Data
 {
     public interface IProductRepository
     {

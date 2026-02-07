@@ -5,8 +5,8 @@
         public Guid Id { get; private set; }
         public string Name { get; private set; } = default!;
         public decimal Price { get; private set; }
-        public string images { get; set; } = string.Empty;
-        public string description { get; private set; } = string.Empty;
+        public string imagesUrl { get; set; } = string.Empty;
+        public string Description { get; private set; } = string.Empty;
         bool inStock { get; set; } = false;
         public int StockQuantity { get; set; }
         public int CategoryId { get; set; }
