@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using StoreZoneV2API.Domain.Entities;
+using StoreZoneV2API.Domain.Entities.TenantDB;
 
 namespace StoreZoneV2API.Infrastructure.Data
 {
@@ -43,6 +43,8 @@ namespace StoreZoneV2API.Infrastructure.Data
                 builder.HasKey(o => o.Id);
                 builder.Property(o => o.OrderDate).IsRequired();
                 builder.Property(o => o.TotalAmount).IsRequired().HasPrecision(18, 2);
+                builder.Property(o => o.Status)
+                        .IsRequired().HasConversion<string>();
             });
             modelBuilder.Entity<OrderItem>(builder =>
             {
@@ -57,6 +59,7 @@ namespace StoreZoneV2API.Infrastructure.Data
                        .WithMany()
                        .HasForeignKey(oi => oi.ProductId)
                        .OnDelete(DeleteBehavior.Restrict);
+                //builder.HasOne(st=>st.Status)
             });
            
         }

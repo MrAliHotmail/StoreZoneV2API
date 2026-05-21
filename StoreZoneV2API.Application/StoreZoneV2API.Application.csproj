@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StoreZoneV2API.Domain\StoreZoneV2API.Domain.csproj" />
+    <ProjectReference Include="..\StoreZoneV2API.Infrastructure\StoreZoneV2API.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
   </ItemGroup>
 
 </Project>
