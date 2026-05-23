@@ -10,11 +10,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
   </ItemGroup>
 
-<<<<<<< Updated upstream
-=======
+
   <ItemGroup>
     <Folder Include="Exceptions\" />
   </ItemGroup>
 
->>>>>>> Stashed changes
+
 </Project>
