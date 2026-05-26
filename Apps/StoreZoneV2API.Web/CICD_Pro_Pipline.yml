@@ -1,0 +1,229 @@
+﻿name: ASP.NET Core API CI/CD Pipeline
+
+on:
+  # تشغيل الـ pipeline عند push أو pull request على main
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # تشغيل يدوي عند الحاجة
+
+# =========================
+# Global Environment Variables
+# =========================
+env:
+  DOTNET_VERSION: "8.0.x"                 # إصدار .NET المستخدم
+  REGISTRY: ghcr.io                       # GitHub Container Registry
+  IMAGE_NAME: ${{ github.repository }}    # اسم الصورة (owner/repo)
+  CONTAINER_NAME: aspnetcore-api          # اسم الكونتينر على السيرفر
+  APP_PORT: 8080                          # البورت الداخلي للتطبيق
+
+# =========================
+# CI JOB (Build + Test + Scan + Docker)
+# =========================
+jobs:
+  ci:
+    name: Continuous Integration Pipeline
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write   # رفع نتائج الفحص الأمني
+      packages: write          # نشر Docker images إلى GHCR
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+
+    # =========================
+    # 1. Checkout Source Code
+    # =========================
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    # =========================
+    # 2. Setup .NET SDK
+    # =========================
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    # =========================
+    # 3. Restore Dependencies
+    # =========================
+    - name: Restore NuGet packages
+      run: dotnet restore
+      # يقوم بتحميل كل dependencies قبل البناء
+
+    # =========================
+    # 4. Build Project
+    # =========================
+    - name: Build solution (Release mode)
+      run: dotnet build --configuration Release --no-restore
+      # بناء المشروع بدون إعادة تحميل الحزم
+
+    # =========================
+    # 5. Run Unit Tests
+    # =========================
+    - name: Run unit tests
+      run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage"
+      # تشغيل الاختبارات + جمع coverage report
+
+    # =========================
+    # 6. Security Scan (Source Code)
+    # =========================
+    - name: Scan source code with Trivy (FS Scan)
+      uses: aquasecurity/trivy-action@0.24.0
+      with:
+        scan-type: fs
+        scan-ref: .
+        format: sarif
+        output: trivy-fs.sarif
+        severity: CRITICAL,HIGH
+        exit-code: '1'
+      # يفشل الـ pipeline إذا وجد ثغرات خطيرة
+
+    # رفع نتائج الفحص إلى GitHub Security Tab
+    - name: Upload FS scan results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: trivy-fs.sarif
+
+    # =========================
+    # 7. Docker Metadata (Tags)
+    # =========================
+    - name: Generate Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=sha                      # tag = commit sha
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    # =========================
+    # 8. Login to GitHub Container Registry
+    # =========================
+    - name: Login to GHCR
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # تسجيل دخول تلقائي إلى registry
+
+    # =========================
+    # 9. Build Docker Image (No Push yet)
+    # =========================
+    - name: Build Docker image locally
+      id: build_image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: false
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+      # يبني الصورة محليًا فقط لاختبارها قبل النشر
+
+    # =========================
+    # 10. Security Scan (Docker Image)
+    # =========================
+    - name: Scan Docker image with Trivy
+      uses: aquasecurity/trivy-action@0.24.0
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+        format: sarif
+        output: trivy-image.sarif
+        severity: CRITICAL,HIGH
+        exit-code: '1'
+      # فحص الصورة بعد البناء
+
+    # رفع نتائج فحص Docker
+    - name: Upload image scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: trivy-image.sarif
+
+    # =========================
+    # 11. Push Docker Image (Main only)
+    # =========================
+    - name: Push Docker image to registry
+      if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+      # نشر الصورة فقط عند main push
+
+# =========================
+# DEPLOY JOB (Production)
+# =========================
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+
+    # =========================
+    # 12. Deploy via SSH
+    # =========================
+    - name: Deploy application on remote server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_SSH_KEY }}
+        script: |
+          set -e
+
+          # تحديد نسخة الصورة
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+
+          # تسجيل دخول إلى registry
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u "${{ github.actor }}" --password-stdin
+
+          # تحميل أحدث صورة
+          docker pull $IMAGE
+
+          # إيقاف وحذف الكونتينر القديم
+          docker stop ${{ env.CONTAINER_NAME }} || true
+          docker rm ${{ env.CONTAINER_NAME }} || true
+
+          # تشغيل الكونتينر الجديد
+          docker run -d \
+            --name ${{ env.CONTAINER_NAME }} \
+            --restart unless-stopped \
+            -p 80:${{ env.APP_PORT }} \
+            -e ASPNETCORE_URLS=http://+:${{ env.APP_PORT }} \
+            $IMAGE
+
+    # =========================
+    # 13. Health Check (20 attempts, 10s interval) , تأكد من أن التطبيق يعمل بشكل صحيح بعد النشر
+    # =========================
+    - name: Application health check
+      run: |
+        set -e
+
+        for i in {1..20}; do
+          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_HEALTH_URL }}")
+
+          if [ "$status" = "200" ]; then
+            echo "✅ Application is healthy"
+            exit 0
+          fi
+
+          echo "⏳ Waiting for application... attempt $i"
+          sleep 10
+        done
+
+        echo "❌ Health check failed"
+        exit 1
